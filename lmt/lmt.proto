@@ -6,22 +6,26 @@ option go_package = "github.com/treeverse/lakefs/lmt;lmt";
 
 
 service LakeMetadataTracker {
-  rpc PutEntry (PutEntryRequest) returns (PutEntryReply) {}
-  rpc GetEntry (GetEntryRequest) returns (GetEntryReply) {}
-  rpc DeleteEntry (DeleteEntryRequest) returns (DeleteEntryReply) {}
+  rpc PutEntry (PutEntryRequest) returns (PutEntryResponse) {}
+  rpc GetEntry (GetEntryRequest) returns (GetEntryResponse) {}
+  rpc DeleteEntry (DeleteEntryRequest) returns (DeleteEntryResponse) {}
+  rpc ListEntries (ListEntriesRequest) returns (ListEntriesResponse) {}
+
+  rpc Commit (CommitRequest) returns (CommitResponse) {}
+  rpc Log (LogRequest) returns (LogResponse) {}
 }
 
 message KeyValue {
-    string key = 1;
-    string value = 2;
+  string key = 1;
+  string value = 2;
 }
 
 message Entry {
-    string path = 1;
-    string address = 2;
-    uint64 size = 3;
-    string checksum = 4;
-    repeated KeyValue metadata = 5;
+  string path = 1;
+  string address = 2;
+  uint64 size = 3;
+  string checksum = 4;
+  repeated KeyValue metadata = 5;
 }
 
 message PutEntryRequest {
@@ -30,7 +34,7 @@ message PutEntryRequest {
   Entry entry = 3;
 }
 
-message PutEntryReply {
+message PutEntryResponse {
 }
 
 message GetEntryRequest {
@@ -39,7 +43,8 @@ message GetEntryRequest {
   string path = 3;
 }
 
-message GetEntryReply {
+message GetEntryResponse {
+  Entry entry = 1;
 }
 
 message DeleteEntryRequest {
@@ -48,6 +53,59 @@ message DeleteEntryRequest {
   string path = 3;
 }
 
-message DeleteEntryReply {
+message DeleteEntryResponse {
 }
 
+message ListEntriesRequest {
+  string repository = 1;
+  string branch = 2;
+  string prefix = 3;
+  string delimiter = 4;
+  int32 page_size = 5;
+  string page_token = 6;
+}
+
+message ListedEntry {
+  enum Type {
+    ENTRY = 0;
+    COMMON_PREFIX = 1;
+  }
+  Type type = 1;
+  Entry entry = 2;
+}
+
+message ListEntriesResponse {
+  repeated ListedEntry entries = 1;
+  string next_page_token = 2;
+}
+
+message CommitRequest {
+  string repository = 1;
+  string branch = 2;
+  string committer = 3;
+  string message = 4;
+  repeated KeyValue metadata = 5;
+}
+
+message CommitResponse {
+  string commit_id = 1;
+}
+
+message LogRequest {
+  string repository = 1;
+  string branch = 2;
+  int32 page_size = 3;
+  string page_token = 4;
+}
+message Commit {
+  string commit_id = 1;
+  string committer = 2;
+  string message = 3;
+  repeated KeyValue metadata = 4;
+  repeated string parent_commit_ids = 5;
+}
+
+message LogResponse {
+  repeated Commit commits = 1;
+  string next_page_token = 2;
+}

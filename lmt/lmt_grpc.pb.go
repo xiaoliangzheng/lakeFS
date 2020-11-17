@@ -17,9 +17,12 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LakeMetadataTrackerClient interface {
-	PutEntry(ctx context.Context, in *PutEntryRequest, opts ...grpc.CallOption) (*PutEntryReply, error)
-	GetEntry(ctx context.Context, in *GetEntryRequest, opts ...grpc.CallOption) (*GetEntryReply, error)
-	DeleteEntry(ctx context.Context, in *DeleteEntryRequest, opts ...grpc.CallOption) (*DeleteEntryReply, error)
+	PutEntry(ctx context.Context, in *PutEntryRequest, opts ...grpc.CallOption) (*PutEntryResponse, error)
+	GetEntry(ctx context.Context, in *GetEntryRequest, opts ...grpc.CallOption) (*GetEntryResponse, error)
+	DeleteEntry(ctx context.Context, in *DeleteEntryRequest, opts ...grpc.CallOption) (*DeleteEntryResponse, error)
+	ListEntries(ctx context.Context, in *ListEntriesRequest, opts ...grpc.CallOption) (*ListEntriesResponse, error)
+	Commit(ctx context.Context, in *CommitRequest, opts ...grpc.CallOption) (*CommitResponse, error)
+	Log(ctx context.Context, in *LogRequest, opts ...grpc.CallOption) (*LogResponse, error)
 }
 
 type lakeMetadataTrackerClient struct {
@@ -30,8 +33,8 @@ func NewLakeMetadataTrackerClient(cc grpc.ClientConnInterface) LakeMetadataTrack
 	return &lakeMetadataTrackerClient{cc}
 }
 
-func (c *lakeMetadataTrackerClient) PutEntry(ctx context.Context, in *PutEntryRequest, opts ...grpc.CallOption) (*PutEntryReply, error) {
-	out := new(PutEntryReply)
+func (c *lakeMetadataTrackerClient) PutEntry(ctx context.Context, in *PutEntryRequest, opts ...grpc.CallOption) (*PutEntryResponse, error) {
+	out := new(PutEntryResponse)
 	err := c.cc.Invoke(ctx, "/lakefs.v1.LakeMetadataTracker/PutEntry", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -39,8 +42,8 @@ func (c *lakeMetadataTrackerClient) PutEntry(ctx context.Context, in *PutEntryRe
 	return out, nil
 }
 
-func (c *lakeMetadataTrackerClient) GetEntry(ctx context.Context, in *GetEntryRequest, opts ...grpc.CallOption) (*GetEntryReply, error) {
-	out := new(GetEntryReply)
+func (c *lakeMetadataTrackerClient) GetEntry(ctx context.Context, in *GetEntryRequest, opts ...grpc.CallOption) (*GetEntryResponse, error) {
+	out := new(GetEntryResponse)
 	err := c.cc.Invoke(ctx, "/lakefs.v1.LakeMetadataTracker/GetEntry", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -48,9 +51,36 @@ func (c *lakeMetadataTrackerClient) GetEntry(ctx context.Context, in *GetEntryRe
 	return out, nil
 }
 
-func (c *lakeMetadataTrackerClient) DeleteEntry(ctx context.Context, in *DeleteEntryRequest, opts ...grpc.CallOption) (*DeleteEntryReply, error) {
-	out := new(DeleteEntryReply)
+func (c *lakeMetadataTrackerClient) DeleteEntry(ctx context.Context, in *DeleteEntryRequest, opts ...grpc.CallOption) (*DeleteEntryResponse, error) {
+	out := new(DeleteEntryResponse)
 	err := c.cc.Invoke(ctx, "/lakefs.v1.LakeMetadataTracker/DeleteEntry", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lakeMetadataTrackerClient) ListEntries(ctx context.Context, in *ListEntriesRequest, opts ...grpc.CallOption) (*ListEntriesResponse, error) {
+	out := new(ListEntriesResponse)
+	err := c.cc.Invoke(ctx, "/lakefs.v1.LakeMetadataTracker/ListEntries", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lakeMetadataTrackerClient) Commit(ctx context.Context, in *CommitRequest, opts ...grpc.CallOption) (*CommitResponse, error) {
+	out := new(CommitResponse)
+	err := c.cc.Invoke(ctx, "/lakefs.v1.LakeMetadataTracker/Commit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lakeMetadataTrackerClient) Log(ctx context.Context, in *LogRequest, opts ...grpc.CallOption) (*LogResponse, error) {
+	out := new(LogResponse)
+	err := c.cc.Invoke(ctx, "/lakefs.v1.LakeMetadataTracker/Log", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -61,9 +91,12 @@ func (c *lakeMetadataTrackerClient) DeleteEntry(ctx context.Context, in *DeleteE
 // All implementations must embed UnimplementedLakeMetadataTrackerServer
 // for forward compatibility
 type LakeMetadataTrackerServer interface {
-	PutEntry(context.Context, *PutEntryRequest) (*PutEntryReply, error)
-	GetEntry(context.Context, *GetEntryRequest) (*GetEntryReply, error)
-	DeleteEntry(context.Context, *DeleteEntryRequest) (*DeleteEntryReply, error)
+	PutEntry(context.Context, *PutEntryRequest) (*PutEntryResponse, error)
+	GetEntry(context.Context, *GetEntryRequest) (*GetEntryResponse, error)
+	DeleteEntry(context.Context, *DeleteEntryRequest) (*DeleteEntryResponse, error)
+	ListEntries(context.Context, *ListEntriesRequest) (*ListEntriesResponse, error)
+	Commit(context.Context, *CommitRequest) (*CommitResponse, error)
+	Log(context.Context, *LogRequest) (*LogResponse, error)
 	mustEmbedUnimplementedLakeMetadataTrackerServer()
 }
 
@@ -71,14 +104,23 @@ type LakeMetadataTrackerServer interface {
 type UnimplementedLakeMetadataTrackerServer struct {
 }
 
-func (UnimplementedLakeMetadataTrackerServer) PutEntry(context.Context, *PutEntryRequest) (*PutEntryReply, error) {
+func (UnimplementedLakeMetadataTrackerServer) PutEntry(context.Context, *PutEntryRequest) (*PutEntryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PutEntry not implemented")
 }
-func (UnimplementedLakeMetadataTrackerServer) GetEntry(context.Context, *GetEntryRequest) (*GetEntryReply, error) {
+func (UnimplementedLakeMetadataTrackerServer) GetEntry(context.Context, *GetEntryRequest) (*GetEntryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetEntry not implemented")
 }
-func (UnimplementedLakeMetadataTrackerServer) DeleteEntry(context.Context, *DeleteEntryRequest) (*DeleteEntryReply, error) {
+func (UnimplementedLakeMetadataTrackerServer) DeleteEntry(context.Context, *DeleteEntryRequest) (*DeleteEntryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteEntry not implemented")
+}
+func (UnimplementedLakeMetadataTrackerServer) ListEntries(context.Context, *ListEntriesRequest) (*ListEntriesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListEntries not implemented")
+}
+func (UnimplementedLakeMetadataTrackerServer) Commit(context.Context, *CommitRequest) (*CommitResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Commit not implemented")
+}
+func (UnimplementedLakeMetadataTrackerServer) Log(context.Context, *LogRequest) (*LogResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Log not implemented")
 }
 func (UnimplementedLakeMetadataTrackerServer) mustEmbedUnimplementedLakeMetadataTrackerServer() {}
 
@@ -147,6 +189,60 @@ func _LakeMetadataTracker_DeleteEntry_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LakeMetadataTracker_ListEntries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListEntriesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LakeMetadataTrackerServer).ListEntries(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/lakefs.v1.LakeMetadataTracker/ListEntries",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LakeMetadataTrackerServer).ListEntries(ctx, req.(*ListEntriesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LakeMetadataTracker_Commit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommitRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LakeMetadataTrackerServer).Commit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/lakefs.v1.LakeMetadataTracker/Commit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LakeMetadataTrackerServer).Commit(ctx, req.(*CommitRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LakeMetadataTracker_Log_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LakeMetadataTrackerServer).Log(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/lakefs.v1.LakeMetadataTracker/Log",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LakeMetadataTrackerServer).Log(ctx, req.(*LogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _LakeMetadataTracker_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "lakefs.v1.LakeMetadataTracker",
 	HandlerType: (*LakeMetadataTrackerServer)(nil),
@@ -162,6 +258,18 @@ var _LakeMetadataTracker_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteEntry",
 			Handler:    _LakeMetadataTracker_DeleteEntry_Handler,
+		},
+		{
+			MethodName: "ListEntries",
+			Handler:    _LakeMetadataTracker_ListEntries_Handler,
+		},
+		{
+			MethodName: "Commit",
+			Handler:    _LakeMetadataTracker_Commit_Handler,
+		},
+		{
+			MethodName: "Log",
+			Handler:    _LakeMetadataTracker_Log_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
