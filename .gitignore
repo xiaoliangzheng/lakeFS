@@ -70,5 +70,5 @@ crash.log
 .terraformrc
 terraform.rc
 
-/cmd/lakefs-lmtc/lakefs-lmt
-/cmd/lakefs-lmtc/lakefs-lmtc
+/lakefs-lmt
+/lakefs-lmtc

@@ -24,7 +24,7 @@ func main() {
 	ctx := context.Background()
 	r, err := c.GetEntry(ctx, &pb.GetEntryRequest{
 		Repository: "repo1",
-		Branch:     "master",
+		Ref:        "master",
 		Path:       "path1",
 	})
 	if err != nil {

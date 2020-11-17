@@ -23,6 +23,13 @@ type LakeMetadataTrackerClient interface {
 	ListEntries(ctx context.Context, in *ListEntriesRequest, opts ...grpc.CallOption) (*ListEntriesResponse, error)
 	Commit(ctx context.Context, in *CommitRequest, opts ...grpc.CallOption) (*CommitResponse, error)
 	Log(ctx context.Context, in *LogRequest, opts ...grpc.CallOption) (*LogResponse, error)
+	CreateBranch(ctx context.Context, in *CreateBranchRequest, opts ...grpc.CallOption) (*CreateBranchResponse, error)
+	GetBranch(ctx context.Context, in *GetBranchRequest, opts ...grpc.CallOption) (*GetBranchResponse, error)
+	ListBranches(ctx context.Context, in *ListBranchesRequest, opts ...grpc.CallOption) (*ListBranchesResponse, error)
+	Diff(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (*DiffResponse, error)
+	Merge(ctx context.Context, in *MergeRequest, opts ...grpc.CallOption) (*MergeResponse, error)
+	Reset(ctx context.Context, in *ResetRequest, opts ...grpc.CallOption) (*ResetResponse, error)
+	Revert(ctx context.Context, in *RevertRequest, opts ...grpc.CallOption) (*RevertResponse, error)
 }
 
 type lakeMetadataTrackerClient struct {
@@ -87,6 +94,69 @@ func (c *lakeMetadataTrackerClient) Log(ctx context.Context, in *LogRequest, opt
 	return out, nil
 }
 
+func (c *lakeMetadataTrackerClient) CreateBranch(ctx context.Context, in *CreateBranchRequest, opts ...grpc.CallOption) (*CreateBranchResponse, error) {
+	out := new(CreateBranchResponse)
+	err := c.cc.Invoke(ctx, "/lakefs.v1.LakeMetadataTracker/CreateBranch", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lakeMetadataTrackerClient) GetBranch(ctx context.Context, in *GetBranchRequest, opts ...grpc.CallOption) (*GetBranchResponse, error) {
+	out := new(GetBranchResponse)
+	err := c.cc.Invoke(ctx, "/lakefs.v1.LakeMetadataTracker/GetBranch", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lakeMetadataTrackerClient) ListBranches(ctx context.Context, in *ListBranchesRequest, opts ...grpc.CallOption) (*ListBranchesResponse, error) {
+	out := new(ListBranchesResponse)
+	err := c.cc.Invoke(ctx, "/lakefs.v1.LakeMetadataTracker/ListBranches", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lakeMetadataTrackerClient) Diff(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (*DiffResponse, error) {
+	out := new(DiffResponse)
+	err := c.cc.Invoke(ctx, "/lakefs.v1.LakeMetadataTracker/Diff", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lakeMetadataTrackerClient) Merge(ctx context.Context, in *MergeRequest, opts ...grpc.CallOption) (*MergeResponse, error) {
+	out := new(MergeResponse)
+	err := c.cc.Invoke(ctx, "/lakefs.v1.LakeMetadataTracker/Merge", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lakeMetadataTrackerClient) Reset(ctx context.Context, in *ResetRequest, opts ...grpc.CallOption) (*ResetResponse, error) {
+	out := new(ResetResponse)
+	err := c.cc.Invoke(ctx, "/lakefs.v1.LakeMetadataTracker/Reset", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lakeMetadataTrackerClient) Revert(ctx context.Context, in *RevertRequest, opts ...grpc.CallOption) (*RevertResponse, error) {
+	out := new(RevertResponse)
+	err := c.cc.Invoke(ctx, "/lakefs.v1.LakeMetadataTracker/Revert", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LakeMetadataTrackerServer is the server API for LakeMetadataTracker service.
 // All implementations must embed UnimplementedLakeMetadataTrackerServer
 // for forward compatibility
@@ -97,6 +167,13 @@ type LakeMetadataTrackerServer interface {
 	ListEntries(context.Context, *ListEntriesRequest) (*ListEntriesResponse, error)
 	Commit(context.Context, *CommitRequest) (*CommitResponse, error)
 	Log(context.Context, *LogRequest) (*LogResponse, error)
+	CreateBranch(context.Context, *CreateBranchRequest) (*CreateBranchResponse, error)
+	GetBranch(context.Context, *GetBranchRequest) (*GetBranchResponse, error)
+	ListBranches(context.Context, *ListBranchesRequest) (*ListBranchesResponse, error)
+	Diff(context.Context, *DiffRequest) (*DiffResponse, error)
+	Merge(context.Context, *MergeRequest) (*MergeResponse, error)
+	Reset(context.Context, *ResetRequest) (*ResetResponse, error)
+	Revert(context.Context, *RevertRequest) (*RevertResponse, error)
 	mustEmbedUnimplementedLakeMetadataTrackerServer()
 }
 
@@ -121,6 +198,27 @@ func (UnimplementedLakeMetadataTrackerServer) Commit(context.Context, *CommitReq
 }
 func (UnimplementedLakeMetadataTrackerServer) Log(context.Context, *LogRequest) (*LogResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Log not implemented")
+}
+func (UnimplementedLakeMetadataTrackerServer) CreateBranch(context.Context, *CreateBranchRequest) (*CreateBranchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateBranch not implemented")
+}
+func (UnimplementedLakeMetadataTrackerServer) GetBranch(context.Context, *GetBranchRequest) (*GetBranchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBranch not implemented")
+}
+func (UnimplementedLakeMetadataTrackerServer) ListBranches(context.Context, *ListBranchesRequest) (*ListBranchesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListBranches not implemented")
+}
+func (UnimplementedLakeMetadataTrackerServer) Diff(context.Context, *DiffRequest) (*DiffResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Diff not implemented")
+}
+func (UnimplementedLakeMetadataTrackerServer) Merge(context.Context, *MergeRequest) (*MergeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Merge not implemented")
+}
+func (UnimplementedLakeMetadataTrackerServer) Reset(context.Context, *ResetRequest) (*ResetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Reset not implemented")
+}
+func (UnimplementedLakeMetadataTrackerServer) Revert(context.Context, *RevertRequest) (*RevertResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Revert not implemented")
 }
 func (UnimplementedLakeMetadataTrackerServer) mustEmbedUnimplementedLakeMetadataTrackerServer() {}
 
@@ -243,6 +341,132 @@ func _LakeMetadataTracker_Log_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LakeMetadataTracker_CreateBranch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateBranchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LakeMetadataTrackerServer).CreateBranch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/lakefs.v1.LakeMetadataTracker/CreateBranch",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LakeMetadataTrackerServer).CreateBranch(ctx, req.(*CreateBranchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LakeMetadataTracker_GetBranch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBranchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LakeMetadataTrackerServer).GetBranch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/lakefs.v1.LakeMetadataTracker/GetBranch",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LakeMetadataTrackerServer).GetBranch(ctx, req.(*GetBranchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LakeMetadataTracker_ListBranches_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListBranchesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LakeMetadataTrackerServer).ListBranches(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/lakefs.v1.LakeMetadataTracker/ListBranches",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LakeMetadataTrackerServer).ListBranches(ctx, req.(*ListBranchesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LakeMetadataTracker_Diff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DiffRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LakeMetadataTrackerServer).Diff(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/lakefs.v1.LakeMetadataTracker/Diff",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LakeMetadataTrackerServer).Diff(ctx, req.(*DiffRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LakeMetadataTracker_Merge_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MergeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LakeMetadataTrackerServer).Merge(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/lakefs.v1.LakeMetadataTracker/Merge",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LakeMetadataTrackerServer).Merge(ctx, req.(*MergeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LakeMetadataTracker_Reset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LakeMetadataTrackerServer).Reset(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/lakefs.v1.LakeMetadataTracker/Reset",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LakeMetadataTrackerServer).Reset(ctx, req.(*ResetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LakeMetadataTracker_Revert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevertRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LakeMetadataTrackerServer).Revert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/lakefs.v1.LakeMetadataTracker/Revert",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LakeMetadataTrackerServer).Revert(ctx, req.(*RevertRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _LakeMetadataTracker_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "lakefs.v1.LakeMetadataTracker",
 	HandlerType: (*LakeMetadataTrackerServer)(nil),
@@ -270,6 +494,34 @@ var _LakeMetadataTracker_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Log",
 			Handler:    _LakeMetadataTracker_Log_Handler,
+		},
+		{
+			MethodName: "CreateBranch",
+			Handler:    _LakeMetadataTracker_CreateBranch_Handler,
+		},
+		{
+			MethodName: "GetBranch",
+			Handler:    _LakeMetadataTracker_GetBranch_Handler,
+		},
+		{
+			MethodName: "ListBranches",
+			Handler:    _LakeMetadataTracker_ListBranches_Handler,
+		},
+		{
+			MethodName: "Diff",
+			Handler:    _LakeMetadataTracker_Diff_Handler,
+		},
+		{
+			MethodName: "Merge",
+			Handler:    _LakeMetadataTracker_Merge_Handler,
+		},
+		{
+			MethodName: "Reset",
+			Handler:    _LakeMetadataTracker_Reset_Handler,
+		},
+		{
+			MethodName: "Revert",
+			Handler:    _LakeMetadataTracker_Revert_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

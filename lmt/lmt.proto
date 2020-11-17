@@ -13,11 +13,20 @@ service LakeMetadataTracker {
 
   rpc Commit (CommitRequest) returns (CommitResponse) {}
   rpc Log (LogRequest) returns (LogResponse) {}
+
+  rpc CreateBranch (CreateBranchRequest) returns (CreateBranchResponse) {}
+  rpc GetBranch (GetBranchRequest) returns (GetBranchResponse) {}
+  rpc ListBranches (ListBranchesRequest) returns (ListBranchesResponse) {}
+
+  rpc Diff (DiffRequest) returns (DiffResponse) {} 
+  rpc Merge (MergeRequest) returns (MergeResponse) {} 
+  rpc Reset (ResetRequest) returns (ResetResponse) {} 
+  rpc Revert (RevertRequest) returns (RevertResponse) {} 
 }
 
-message KeyValue {
-  string key = 1;
-  string value = 2;
+message PaginationParams {
+  int32 page_size = 1;
+  string page_token = 2;
 }
 
 message Entry {
@@ -25,7 +34,7 @@ message Entry {
   string address = 2;
   uint64 size = 3;
   string checksum = 4;
-  repeated KeyValue metadata = 5;
+  map<string, string> metadata = 5;
 }
 
 message PutEntryRequest {
@@ -39,7 +48,7 @@ message PutEntryResponse {
 
 message GetEntryRequest {
   string repository = 1;
-  string branch = 2;
+  string ref = 2;
   string path = 3;
 }
 
@@ -61,8 +70,7 @@ message ListEntriesRequest {
   string branch = 2;
   string prefix = 3;
   string delimiter = 4;
-  int32 page_size = 5;
-  string page_token = 6;
+  PaginationParams pagination = 5;
 }
 
 message ListedEntry {
@@ -84,7 +92,7 @@ message CommitRequest {
   string branch = 2;
   string committer = 3;
   string message = 4;
-  repeated KeyValue metadata = 5;
+  map<string, string> metadata = 5;
 }
 
 message CommitResponse {
@@ -94,18 +102,116 @@ message CommitResponse {
 message LogRequest {
   string repository = 1;
   string branch = 2;
-  int32 page_size = 3;
-  string page_token = 4;
+  PaginationParams pagination = 3;
 }
 message Commit {
   string commit_id = 1;
   string committer = 2;
   string message = 3;
-  repeated KeyValue metadata = 4;
+  map<string, string> metadata = 4;
   repeated string parent_commit_ids = 5;
 }
 
 message LogResponse {
   repeated Commit commits = 1;
   string next_page_token = 2;
+}
+
+message CreateBranchRequest {
+  string repository = 1;
+  string branch = 2;
+  string ref = 3;
+}
+
+message CreateBranchResponse {
+  string commit_id = 1;
+}
+
+message GetBranchRequest {
+  string repository = 1;
+  string branch = 2;
+}
+
+message GetBranchResponse {
+  string commit_id = 1;
+}
+
+message ListBranchesRequest {
+  string repository = 1;
+  PaginationParams pagination = 2;
+}
+
+
+message Branch {
+  string name = 1;
+}
+
+message ListBranchesResponse {
+  repeated Branch branches = 1;
+  string next_page_token = 2;
+}
+
+message DiffRequest {
+  string repository = 1;
+  string reference = 2;
+  string with_reference = 3;
+  PaginationParams pagination = 4;
+}
+
+
+enum ChangeType {
+  ADDED = 0;
+  MODIFIED = 1;
+  DELETED = 2;
+  CONFLICT = 3;
+}
+
+message Difference {
+  ChangeType type = 1;
+  Entry entry = 2;
+}
+
+message DiffResponse {
+  repeated Difference differences = 1;
+  string next_page_token = 2;
+}
+
+message MergeRequest {
+  string repository = 1;
+  string branch = 2;
+  string from_reference = 3;
+  string committer = 4;
+}
+
+
+message ChangeCount {
+  ChangeType type = 1;
+  int32 count = 2;
+}
+
+message MergeResponse {
+  string commit_id = 1;
+  repeated ChangeCount summary = 2;
+} 
+
+message ResetRequest {
+  string repository = 1;
+  string branch = 2;
+  oneof path_oneof {
+    string path = 3;
+    string prefix = 4;
+  }
+}
+
+message ResetResponse {
+}
+
+message RevertRequest {
+  string repository = 1;
+  string branch = 2;
+  string ref = 3;
+}
+
+message RevertResponse {
+  string commit_id = 1;
 }
