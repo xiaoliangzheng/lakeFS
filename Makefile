@@ -143,3 +143,8 @@ help:  ## Show Help menu
 
 # helpers
 gen: gen-api gen-ui gen-ddl
+
+proto:
+	protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative lmt/lmt.proto
+
+

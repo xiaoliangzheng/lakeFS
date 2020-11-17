@@ -69,3 +69,6 @@ crash.log
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+/cmd/lakefs-lmtc/lakefs-lmt
+/cmd/lakefs-lmtc/lakefs-lmtc

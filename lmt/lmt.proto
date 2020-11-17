@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package lakefs.v1;
+
+option go_package = "github.com/treeverse/lakefs/lmt;lmt";
+
+
+service LakeMetadataTracker {
+  rpc PutEntry (PutEntryRequest) returns (PutEntryReply) {}
+  rpc GetEntry (GetEntryRequest) returns (GetEntryReply) {}
+  rpc DeleteEntry (DeleteEntryRequest) returns (DeleteEntryReply) {}
+}
+
+message KeyValue {
+    string key = 1;
+    string value = 2;
+}
+
+message Entry {
+    string path = 1;
+    string address = 2;
+    uint64 size = 3;
+    string checksum = 4;
+    repeated KeyValue metadata = 5;
+}
+
+message PutEntryRequest {
+  string repository = 1;
+  string branch = 2;
+  Entry entry = 3;
+}
+
+message PutEntryReply {
+}
+
+message GetEntryRequest {
+  string repository = 1;
+  string branch = 2;
+  string path = 3;
+}
+
+message GetEntryReply {
+}
+
+message DeleteEntryRequest {
+  string repository = 1;
+  string branch = 2;
+  string path = 3;
+}
+
+message DeleteEntryReply {
+}
+
