@@ -1,6 +1,7 @@
 package s3
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -51,6 +52,8 @@ type Adapter struct {
 	uploadIDTranslator    block.UploadIDTranslator
 	streamingChunkSize    int
 	streamingChunkTimeout time.Duration
+	useAwsClient          bool
+	// uploader              *s3manager.Uploader
 }
 
 func WithHTTPClient(c *http.Client) func(a *Adapter) {
@@ -62,6 +65,24 @@ func WithHTTPClient(c *http.Client) func(a *Adapter) {
 func WithStreamingChunkSize(sz int) func(a *Adapter) {
 	return func(a *Adapter) {
 		a.streamingChunkSize = sz
+	}
+}
+
+// func WithUploader(useUploader bool) func(a *Adapter) {
+// 	return func(a *Adapter) {
+// 		if useUploader {
+// 			a.uploader = &s3manager.Uploader{
+// 				S3: a.s3,
+// 			}
+// 		} else {
+// 			a.uploader = nil
+// 		}
+// 	}
+// }
+
+func WithAwsClient(b bool) func(a *Adapter) {
+	return func(a *Adapter) {
+		a.useAwsClient = b
 	}
 }
 
@@ -106,6 +127,7 @@ func (a *Adapter) WithContext(ctx context.Context) block.Adapter {
 		uploadIDTranslator:    a.uploadIDTranslator,
 		streamingChunkSize:    a.streamingChunkSize,
 		streamingChunkTimeout: a.streamingChunkTimeout,
+		useAwsClient:          a.useAwsClient,
 	}
 }
 
@@ -121,13 +143,28 @@ func (a *Adapter) Put(obj block.ObjectPointer, sizeBytes int64, reader io.Reader
 	if err != nil {
 		return err
 	}
-	putObject := s3.PutObjectInput{
-		Bucket:       aws.String(qualifiedKey.StorageNamespace),
-		Key:          aws.String(qualifiedKey.Key),
-		StorageClass: opts.StorageClass,
+	if a.useAwsClient {
+		putObject := &s3.PutObjectInput{
+			Bucket:       aws.String(qualifiedKey.StorageNamespace),
+			Key:          aws.String(qualifiedKey.Key),
+			StorageClass: opts.StorageClass,
+		}
+		_, err = a.s3.PutObjectWithContext(a.ctx, putObject)
+	} else {
+		putObject := s3.PutObjectInput{
+			Bucket:       aws.String(qualifiedKey.StorageNamespace),
+			Key:          aws.String(qualifiedKey.Key),
+			StorageClass: opts.StorageClass,
+		}
+		sdkRequest, _ := a.s3.PutObjectRequest(&putObject)
+		_, err = a.streamToS3(sdkRequest, sizeBytes, reader)
 	}
-	sdkRequest, _ := a.s3.PutObjectRequest(&putObject)
-	_, err = a.streamToS3(sdkRequest, sizeBytes, reader)
+	// _, err = a.uploader.Upload(&s3manager.UploadInput{
+	// 	Bucket:       aws.String(qualifiedKey.StorageNamespace),
+	// 	Key:          aws.String(qualifiedKey.Key),
+	// 	StorageClass: opts.StorageClass,
+	// 	Body:         reader,
+	// })
 	return err
 }
 
@@ -139,14 +176,48 @@ func (a *Adapter) UploadPart(obj block.ObjectPointer, sizeBytes int64, reader io
 		return "", err
 	}
 	uploadID = a.uploadIDTranslator.TranslateUploadID(uploadID)
-	uploadPartObject := s3.UploadPartInput{
-		Bucket:     aws.String(qualifiedKey.StorageNamespace),
-		Key:        aws.String(qualifiedKey.Key),
-		PartNumber: aws.Int64(partNumber),
-		UploadId:   aws.String(uploadID),
+	var etag string
+	if a.useAwsClient {
+		var body []byte
+		body, err = ioutil.ReadAll(reader)
+		if err != nil {
+			return "", err
+		}
+		uploadPartObject := &s3.UploadPartInput{
+			Bucket:     aws.String(qualifiedKey.StorageNamespace),
+			Key:        aws.String(qualifiedKey.Key),
+			PartNumber: aws.Int64(partNumber),
+			UploadId:   aws.String(uploadID),
+			Body:       aws.ReadSeekCloser(bytes.NewReader(body)),
+			//ContentLength: aws.Int64(sizeBytes),
+		}
+		var resp *s3.UploadPartOutput
+		resp, err = a.s3.UploadPartWithContext(a.ctx, uploadPartObject)
+		if resp != nil {
+			etag = aws.StringValue(resp.ETag)
+		}
+	} else {
+		uploadPartObject := &s3.UploadPartInput{
+			Bucket:     aws.String(qualifiedKey.StorageNamespace),
+			Key:        aws.String(qualifiedKey.Key),
+			PartNumber: aws.Int64(partNumber),
+			UploadId:   aws.String(uploadID),
+		}
+		sdkRequest, _ := a.s3.UploadPartRequest(uploadPartObject)
+		etag, err = a.streamToS3(sdkRequest, sizeBytes, reader)
 	}
-	sdkRequest, _ := a.s3.UploadPartRequest(&uploadPartObject)
-	etag, err := a.streamToS3(sdkRequest, sizeBytes, reader)
+	// uploadPartObject := &s3.UploadPartInput{
+	// 	Bucket:     aws.String(qualifiedKey.StorageNamespace),
+	// 	Key:        aws.String(qualifiedKey.Key),
+	// 	PartNumber: aws.Int64(partNumber),
+	// 	UploadId:   aws.String(uploadID),
+	// 	Body:       aws.ReadSeekCloser(reader),
+	// }
+	// var resp *s3.UploadPartOutput
+	// resp, err = a.s3.UploadPart(uploadPartObject)
+	// if resp != nil {
+	// 	etag = aws.StringValue(resp.ETag)
+	// }
 	if err != nil {
 		return "", err
 	}

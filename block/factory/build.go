@@ -83,6 +83,7 @@ func buildS3Adapter(params params.S3) (*s3a.Adapter, error) {
 	adapter := s3a.NewAdapter(svc,
 		s3a.WithStreamingChunkSize(params.StreamingChunkSize),
 		s3a.WithStreamingChunkTimeout(params.StreamingChunkTimeout),
+		s3a.WithAwsClient(params.UseAwsClient),
 	)
 	logging.Default().WithField("type", "s3").Info("initialized blockstore adapter")
 	return adapter, nil

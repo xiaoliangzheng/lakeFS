@@ -233,6 +233,7 @@ func (c *Config) GetBlockAdapterS3Params() (blockparams.S3, error) {
 		AwsConfig:             cfg,
 		StreamingChunkSize:    viper.GetInt("blockstore.s3.streaming_chunk_size"),
 		StreamingChunkTimeout: viper.GetDuration("blockstore.s3.streaming_chunk_timeout"),
+		UseAwsClient:          viper.GetBool("blockstore.s3.use_aws_client"),
 	}, nil
 }
 
