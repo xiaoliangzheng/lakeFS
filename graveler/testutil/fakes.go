@@ -10,8 +10,6 @@ import (
 	"github.com/treeverse/lakefs/graveler/committed"
 )
 
-const DefaultBranchID = graveler.BranchID("master")
-
 type AppliedData struct {
 	Values      graveler.ValueIterator
 	MetaRangeID graveler.MetaRangeID
@@ -182,7 +180,7 @@ type RefsFake struct {
 func (m *RefsFake) RevParse(_ context.Context, _ graveler.RepositoryID, _ graveler.Ref) (graveler.Reference, error) {
 	var branch graveler.BranchID
 	if m.RefType == graveler.ReferenceTypeBranch {
-		branch = DefaultBranchID
+		branch = graveler.DefaultBranchID
 	}
 	return NewFakeReference(m.RefType, branch, ""), nil
 }

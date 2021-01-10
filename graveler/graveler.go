@@ -32,6 +32,8 @@ const (
 	ReferenceTypeBranch
 )
 
+const DefaultBranchID = BranchID("master")
+
 type Reference interface {
 	Type() ReferenceType
 	Branch() Branch
@@ -55,7 +57,7 @@ type Ref string
 // TagID represents a named tag pointing at a commit
 type TagID string
 
-// CommitParents commit's parents slice
+// CommitParents commit parents slice
 type CommitParents []CommitID
 
 // BranchID is an identifier for a branch
@@ -473,7 +475,7 @@ type graveler struct {
 	CommittedManager CommittedManager
 	StagingManager   StagingManager
 	RefManager       RefManager
-	branchLocker     branchLocker
+	branchLocker     *branchLocker
 	log              logging.Logger
 }
 
@@ -483,7 +485,7 @@ func NewGraveler(committedManager CommittedManager, stagingManager StagingManage
 		StagingManager:   stagingManager,
 		RefManager:       refManager,
 		log:              logging.Default().WithField("service_name", "graveler_graveler"),
-		branchLocker:     NewBranchLocker(),
+		branchLocker:     newBranchLocker(),
 	}
 }
 
@@ -560,7 +562,7 @@ func (g *graveler) CreateBranch(ctx context.Context, repositoryID RepositoryID, 
 }
 
 func (g *graveler) UpdateBranch(ctx context.Context, repositoryID RepositoryID, branchID BranchID, ref Ref) (*Branch, error) {
-	cancel, err := g.branchLocker.AquireMetadataUpdate(repositoryID, branchID)
+	cancel, err := g.branchLocker.AcquireMetadataUpdate(repositoryID, branchID)
 	if err != nil {
 		return nil, err
 	}
@@ -633,7 +635,7 @@ func (g *graveler) ListBranches(ctx context.Context, repositoryID RepositoryID) 
 }
 
 func (g *graveler) DeleteBranch(ctx context.Context, repositoryID RepositoryID, branchID BranchID) error {
-	cancel, err := g.branchLocker.AquireMetadataUpdate(repositoryID, branchID)
+	cancel, err := g.branchLocker.AcquireMetadataUpdate(repositoryID, branchID)
 	if err != nil {
 		return err
 	}
@@ -682,7 +684,7 @@ func (g *graveler) Get(ctx context.Context, repositoryID RepositoryID, ref Ref, 
 }
 
 func (g *graveler) Set(ctx context.Context, repositoryID RepositoryID, branchID BranchID, key Key, value Value) error {
-	cancel, err := g.branchLocker.AquireWrite(repositoryID, branchID)
+	cancel, err := g.branchLocker.AcquireWrite(repositoryID, branchID)
 	if err != nil {
 		return err
 	}
@@ -695,7 +697,7 @@ func (g *graveler) Set(ctx context.Context, repositoryID RepositoryID, branchID 
 }
 
 func (g *graveler) Delete(ctx context.Context, repositoryID RepositoryID, branchID BranchID, key Key) error {
-	cancel, err := g.branchLocker.AquireWrite(repositoryID, branchID)
+	cancel, err := g.branchLocker.AcquireWrite(repositoryID, branchID)
 	if err != nil {
 		return err
 	}
@@ -764,7 +766,7 @@ func (g *graveler) List(ctx context.Context, repositoryID RepositoryID, ref Ref)
 }
 
 func (g *graveler) Commit(ctx context.Context, repositoryID RepositoryID, branchID BranchID, committer string, message string, metadata Metadata) (CommitID, error) {
-	cancel, err := g.branchLocker.AquireMetadataUpdate(repositoryID, branchID)
+	cancel, err := g.branchLocker.AcquireMetadataUpdate(repositoryID, branchID)
 	if err != nil {
 		return "", fmt.Errorf("acquire metadata update: %w", err)
 	}
@@ -814,7 +816,7 @@ func (g *graveler) Commit(ctx context.Context, repositoryID RepositoryID, branch
 }
 
 func (g *graveler) CommitExistingMetaRange(ctx context.Context, repositoryID RepositoryID, branchID BranchID, metaRangeID MetaRangeID, committer string, message string, metadata Metadata) (CommitID, error) {
-	cancel, err := g.branchLocker.AquireMetadataUpdate(repositoryID, branchID)
+	cancel, err := g.branchLocker.AcquireMetadataUpdate(repositoryID, branchID)
 	if err != nil {
 		return "", fmt.Errorf("acquire metadata update: %w", err)
 	}
@@ -870,7 +872,7 @@ func (g *graveler) stagingEmpty(ctx context.Context, branch *Branch) (bool, erro
 }
 
 func (g *graveler) Reset(ctx context.Context, repositoryID RepositoryID, branchID BranchID) error {
-	cancel, err := g.branchLocker.AquireWrite(repositoryID, branchID)
+	cancel, err := g.branchLocker.AcquireWrite(repositoryID, branchID)
 	if err != nil {
 		return err
 	}
@@ -883,7 +885,7 @@ func (g *graveler) Reset(ctx context.Context, repositoryID RepositoryID, branchI
 }
 
 func (g *graveler) ResetKey(ctx context.Context, repositoryID RepositoryID, branchID BranchID, key Key) error {
-	cancel, err := g.branchLocker.AquireWrite(repositoryID, branchID)
+	cancel, err := g.branchLocker.AcquireWrite(repositoryID, branchID)
 	if err != nil {
 		return err
 	}
@@ -896,7 +898,7 @@ func (g *graveler) ResetKey(ctx context.Context, repositoryID RepositoryID, bran
 }
 
 func (g *graveler) ResetPrefix(ctx context.Context, repositoryID RepositoryID, branchID BranchID, key Key) error {
-	cancel, err := g.branchLocker.AquireWrite(repositoryID, branchID)
+	cancel, err := g.branchLocker.AcquireWrite(repositoryID, branchID)
 	if err != nil {
 		return err
 	}
@@ -913,7 +915,7 @@ func (g *graveler) Revert(_ context.Context, _ RepositoryID, _ BranchID, _ Ref) 
 }
 
 func (g *graveler) Merge(ctx context.Context, repositoryID RepositoryID, from Ref, to BranchID, committer string, message string, metadata Metadata) (CommitID, error) {
-	cancel, err := g.branchLocker.AquireMetadataUpdate(repositoryID, to)
+	cancel, err := g.branchLocker.AcquireMetadataUpdate(repositoryID, to)
 	if err != nil {
 		return "", err
 	}

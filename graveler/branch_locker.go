@@ -21,18 +21,18 @@ type branchLockerData struct {
 	metadataUpdate bool
 }
 
-func NewBranchLocker() branchLocker {
+func newBranchLocker() *branchLocker {
 	m := sync.Mutex{}
-	return branchLocker{
+	return &branchLocker{
 		locker:   &m,
 		c:        sync.NewCond(&m),
 		branches: make(map[string]*branchLockerData),
 	}
 }
 
-// AquireWrite returns a cancel function to release if write is currently available
+// AcquireWrite returns a cancel function to release if write is currently available
 // returns ErrBranchLocked if metadata update is currently in progress
-func (l *branchLocker) AquireWrite(repositoryID RepositoryID, branchID BranchID) (func(), error) {
+func (l *branchLocker) AcquireWrite(repositoryID RepositoryID, branchID BranchID) (func(), error) {
 	key := formatBranchLockerKey(repositoryID, branchID)
 	l.locker.Lock()
 	defer l.locker.Unlock()
@@ -62,10 +62,10 @@ func (l *branchLocker) releaseWrite(key string) {
 	}
 }
 
-// AquireMetadataUpdate returns a cancel function to release if metadata update is currently available
+// AcquireMetadataUpdate returns a cancel function to release if metadata update is currently available
 // Will wait until all current writers are done
 // returns ErrBranchLocked if metadata update is currently in progress
-func (l *branchLocker) AquireMetadataUpdate(repositoryID RepositoryID, branchID BranchID) (func(), error) {
+func (l *branchLocker) AcquireMetadataUpdate(repositoryID RepositoryID, branchID BranchID) (func(), error) {
 	key := formatBranchLockerKey(repositoryID, branchID)
 	l.locker.Lock()
 	defer l.locker.Unlock()
