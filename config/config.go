@@ -19,8 +19,10 @@ import (
 	authparams "github.com/treeverse/lakefs/auth/params"
 	"github.com/treeverse/lakefs/block/factory"
 	blockparams "github.com/treeverse/lakefs/block/params"
+	"github.com/treeverse/lakefs/cache"
 	catalogparams "github.com/treeverse/lakefs/catalog/mvcc/params"
 	dbparams "github.com/treeverse/lakefs/db/params"
+	"github.com/treeverse/lakefs/graveler/committed"
 	"github.com/treeverse/lakefs/logging"
 	pyramidparams "github.com/treeverse/lakefs/pyramid/params"
 )
@@ -36,7 +38,12 @@ const (
 	DefaultCommittedLocalCacheMetaRangePercent = 0.1
 	DefaultCommittedLocalCacheBytes            = 1 * 1024 * 1024 * 1024
 	DefaultCommittedLocalCacheDir              = "~/lakefs/local_tier"
+	DefaultCommittedMetaRangeReaderCacheSize   = 20
+	DefaultCommittedMetaRangeReaderNumShards   = 6
+	DefaultCommittedRangeReaderCacheSize       = 100
+	DefaultCommittedRangeReaderNumShards       = 12
 	DefaultCommittedBlockStoragePrefix         = "_lakefs"
+	DefaultCommittedPermanentRangeSizeBytes    = 10 * 1024 * 1024
 
 	DefaultBlockStoreGSS3Endpoint = "https://storage.googleapis.com"
 
@@ -103,8 +110,13 @@ const (
 	CommittedLocalCacheSizeBytesKey        = "committed.local_cache.size_bytes"
 	CommittedLocalCacheDirKey              = "committed.local_cache.dir"
 	CommittedLocalCacheRangeProportion     = "committed.local_cache.range_proportion"
+	CommittedRangeReaderCacheSize          = "committed.local_cache.range.open_readers"
+	CommittedRangeReaderCacheNumShards     = "committed.local_cache.range.num_shards"
 	CommittedLocalCacheMetaRangeProportion = "committed.local_cache.metarange_proportion"
+	CommittedMetaRangeReaderCacheSize      = "committed.local_cache.metarange.open_readers"
+	CommittedMetaRangeReaderCacheNumShards = "committed.local_cache.metarange.num_shards"
 	CommittedBlockStoragePrefixKey         = "committed.block_storage_prefix"
+	CommittedPermanentStorageRangeSizeKey  = "committed.permanent.approximate_range_size_bytes"
 	GatewaysS3DomainNameKey                = "gateways.s3.domain_name"
 	GatewaysS3RegionKey                    = "gateways.s3.region"
 
@@ -136,9 +148,15 @@ func setDefaults() {
 
 	viper.SetDefault(CommittedLocalCacheSizeBytesKey, DefaultCommittedLocalCacheBytes)
 	viper.SetDefault(CommittedLocalCacheDirKey, DefaultCommittedLocalCacheDir)
-	viper.SetDefault(CommittedBlockStoragePrefixKey, DefaultCommittedBlockStoragePrefix)
+	viper.SetDefault(CommittedRangeReaderCacheSize, DefaultCommittedRangeReaderCacheSize)
+	viper.SetDefault(CommittedRangeReaderCacheNumShards, DefaultCommittedRangeReaderNumShards)
 	viper.SetDefault(CommittedLocalCacheRangeProportion, DefaultCommittedLocalCacheRangePercent)
 	viper.SetDefault(CommittedLocalCacheMetaRangeProportion, DefaultCommittedLocalCacheMetaRangePercent)
+	viper.SetDefault(CommittedMetaRangeReaderCacheSize, DefaultCommittedMetaRangeReaderCacheSize)
+	viper.SetDefault(CommittedMetaRangeReaderCacheNumShards, DefaultCommittedMetaRangeReaderNumShards)
+
+	viper.SetDefault(CommittedBlockStoragePrefixKey, DefaultCommittedBlockStoragePrefix)
+	viper.SetDefault(CommittedPermanentStorageRangeSizeKey, DefaultCommittedPermanentRangeSizeBytes)
 
 	viper.SetDefault(GatewaysS3DomainNameKey, DefaultS3GatewayDomainName)
 	viper.SetDefault(GatewaysS3RegionKey, DefaultS3GatewayRegion)
@@ -370,6 +388,11 @@ func (c *Config) GetCommittedTierFSParams() (*pyramidparams.ExtParams, error) {
 		return nil, fmt.Errorf("range_proportion(%f) and metarange_proportion(%f): %w", rangePro, metaRangePro, ErrInvalidProportion)
 	}
 
+	localCacheDir, err := homedir.Expand(viper.GetString(CommittedLocalCacheDirKey))
+	if err != nil {
+		return nil, fmt.Errorf("expand %s: %w", viper.GetString(CommittedLocalCacheDirKey), err)
+	}
+
 	logger := logging.Default().WithField("module", "pyramid")
 	return &pyramidparams.ExtParams{
 		RangeAllocationProportion:     rangePro,
@@ -379,11 +402,35 @@ func (c *Config) GetCommittedTierFSParams() (*pyramidparams.ExtParams, error) {
 			Adapter:            adapter,
 			BlockStoragePrefix: viper.GetString(CommittedBlockStoragePrefixKey),
 			Local: pyramidparams.LocalDiskParams{
-				BaseDir:             viper.GetString(CommittedLocalCacheDirKey),
+				BaseDir:             localCacheDir,
 				TotalAllocatedBytes: viper.GetInt64(CommittedLocalCacheSizeBytesKey),
 			},
 		},
 	}, nil
+}
+
+func (c *Config) GetCommittedParams() *committed.Params {
+	return &committed.Params{
+		ApproximateRangeSizeBytes: viper.GetUint64(CommittedPermanentStorageRangeSizeKey),
+	}
+}
+
+func (c *Config) GetCommittedRangeSSTableCacheParams() *cache.ParamsWithDisposal {
+	return &cache.ParamsWithDisposal{
+		Name:   "ranges SSTable reader cache",
+		Logger: logging.Default().WithField("cache", "range_reader"),
+		Size:   viper.GetInt(CommittedRangeReaderCacheSize),
+		Shards: viper.GetInt(CommittedRangeReaderCacheNumShards),
+	}
+}
+
+func (c *Config) GetCommittedMetaRangeSSTableCacheParams() *cache.ParamsWithDisposal {
+	return &cache.ParamsWithDisposal{
+		Name:   "meta-ranges SSTable reader cache",
+		Logger: logging.Default().WithField("cache", "meta_range_reader"),
+		Size:   viper.GetInt(CommittedMetaRangeReaderCacheSize),
+		Shards: viper.GetInt(CommittedMetaRangeReaderCacheNumShards),
+	}
 }
 
 func GetMetastoreAwsConfig() *aws.Config {
