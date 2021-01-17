@@ -200,7 +200,7 @@ const runBanner = `
 │
 
 │
-│ For support or any other question,
+│ If you have any questions or need technical support,
 │     join our Slack channel https://join.slack.com/t/lakefs/shared_invite/zt-g86mkroy-186GzaxR4xOar1i1Us0bzw
 │
 
