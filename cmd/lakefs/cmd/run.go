@@ -199,6 +199,11 @@ const runBanner = `
 │     check out the docs at https://docs.lakefs.io/quickstart/repository
 │
 
+│
+│ For support or any other question,
+│     join our Slack channel https://join.slack.com/t/lakefs/shared_invite/zt-g86mkroy-186GzaxR4xOar1i1Us0bzw
+│
+
 `
 
 func printWelcome(w io.Writer) {
