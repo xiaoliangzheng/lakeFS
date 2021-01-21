@@ -232,6 +232,7 @@ func calcPathSum(repo string, branch string, path string) uint64 {
 	sum := h.Sum64()
 	return sum
 }
+
 func calcPathHash(repo string, branch string, path string) string {
 	sum := calcPathSum(repo, branch, path)
 	return strconv.FormatUint(sum, 16)
